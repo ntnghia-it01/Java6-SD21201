@@ -1,5 +1,6 @@
 package com.fpoly.java6.response;
 
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -16,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class DataResponse<T> {
 	private boolean success;
 	private String message;
-	private Map<String, String> errors;
+	private Map<String, List<String>> errors;
 	private T data;
 }
 

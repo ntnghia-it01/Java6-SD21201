@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fpoly.java6.beans.CategoryBean;
 import com.fpoly.java6.response.DataResponse;
+import com.fpoly.java6.services.CategoryService;
+import com.fpoly.java6.services.ErrorServices;
 
 import jakarta.validation.Valid;
 
@@ -25,6 +28,12 @@ import jakarta.validation.Valid;
 // Khi client gọi API /category => Controller sẽ kích hoạt
 @RequestMapping("/category")
 public class CategoryController {
+	
+	@Autowired
+	private ErrorServices errorServices;
+	
+	@Autowired
+	private CategoryService categoryService;
 
 //	Lấy danh sách
 	@GetMapping
@@ -53,28 +62,37 @@ public class CategoryController {
 //	API thêm danh mục
 //	POST /category
 	@PostMapping
-	public ResponseEntity<DataResponse<String>> adCategory(@Valid @RequestBody CategoryBean bean,
+	public ResponseEntity<DataResponse<String>> adCategory(
+			@Valid @RequestBody CategoryBean bean,
 			Errors errors){
+		DataResponse<String> response = new DataResponse<String>();
+		Map<String, List<String>> errorMap = errorServices.getError(errors);
 		
-		if(errors.hasErrors()) {
-			Map<String, List<String>> errorMap = new HashMap<>();
-
-	        for (FieldError fieldError : errors.getFieldErrors()) {
-	            String fieldName = fieldError.getField();
-	            String message = fieldError.getDefaultMessage();
-
-	            List<String> messages = errorMap.get(fieldName);
-
-	            if (messages == null) {
-	                messages = new ArrayList<>();
-	                errorMap.put(fieldName, messages);
-	            }
-
-	            messages.add(message);
-	        }
+		if(errorMap != null) {
+	        response.setSuccess(false);
+	        response.setErrors(errorMap);
+	        response.setData(null);
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
 		
-		return ResponseEntity.status(HttpStatus.CREATED).body(null);
+		try {
+			categoryService.addCategory(bean);
+		}catch (Exception e) {
+			response.setSuccess(false);
+			response.setData(null);
+			errorMap = new HashMap<String, List<String>>();
+			List<String> errorsDB = new ArrayList<String>();
+			errorsDB.add(e.getMessage());
+			errorMap.put("error", errorsDB);
+			response.setErrors(errorMap);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
+		response.setSuccess(true);
+		response.setMessage("Tạo danh mục thành công");
+		response.setData(null);
+		
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 }
 
