@@ -12,9 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,9 +56,27 @@ public class CategoryController {
 //	API lấy chi tiết của danh mục 
 //	GET /category/1
 	@GetMapping("/{id}")
-	public ResponseEntity<String> getDetail(@PathVariable(name = "id") int catId){
+	public ResponseEntity<DataResponse<CategoryResponse>> getDetail(@PathVariable(name = "id") String catId){
 		
-		return ResponseEntity.status(HttpStatus.OK).body("");
+		DataResponse<CategoryResponse> response = new DataResponse<CategoryResponse>();
+		
+		try {
+			CategoryResponse categoryResponse = categoryService.getCategoryDetail(catId);
+			response.setSuccess(true);
+			response.setMessage("Lấy chi tiết danh mục thành công");
+			response.setData(categoryResponse);
+			
+		}catch (Exception e) {
+			response.setSuccess(false);
+			
+			Map<String, List<String>> errorMap = new HashMap<String, List<String>>();
+			errorMap.put("error", Collections.singletonList(e.getMessage()));
+			response.setErrors(errorMap);
+			
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 	
 //	API thêm danh mục
@@ -66,6 +86,7 @@ public class CategoryController {
 			@Valid @RequestBody Optional<CategoryBean> bean,
 			Errors errors){
 		DataResponse<String> response = new DataResponse<String>();
+		
 		if (!bean.isPresent()) {
 	        Map<String, List<String>> errorMap = new HashMap<>();
 	        errorMap.put(
@@ -105,6 +126,73 @@ public class CategoryController {
 		response.setData(null);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	}
+	
+	@PutMapping("/{id}")
+	public ResponseEntity<DataResponse<String>> editCategory(
+			@PathVariable(name = "id") String id,
+			@Valid @RequestBody Optional<CategoryBean> beanOptional,
+			Errors errors){
+		DataResponse<String> response = new DataResponse<String>();
+		
+//		Kiểm tra có post body lên không? 
+		if(!beanOptional.isPresent()) {
+			response.setSuccess(false);
+			Map<String, List<String>> errorMap = new HashMap<String, List<String>>();
+//			Collections.singletonList => Tạo một danh sách có 1 item
+//			new ArrayList => add 
+			errorMap.put("error", Collections.singletonList("Request body không được bỏ trống"));
+			response.setErrors(errorMap);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
+//		Có body nhưng bị lỗi validate ở bean
+		Map<String, List<String>> errorMap = errorServices.getError(errors);
+		if(errorMap != null) {
+	        response.setSuccess(false);
+	        response.setErrors(errorMap);
+	        response.setData(null);
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
+		try {
+			categoryService.updateCategory(id, beanOptional.get());
+		}catch (Exception e) {
+			response.setSuccess(false);
+			response.setData(null);
+			errorMap = new HashMap<String, List<String>>();
+			errorMap.put("error", Collections.singletonList(e.getMessage()));
+			response.setErrors(errorMap);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
+		
+		response.setSuccess(true);
+		response.setMessage("Cập nhật danh mục thành công");
+		response.setData(null);
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+	}
+	
+	@DeleteMapping("/{id}")
+	public ResponseEntity<DataResponse<String>> deleteCategory(
+			@PathVariable(name = "id") String id){
+		DataResponse<String> response = new DataResponse<String>();
+		
+		try {
+			categoryService.deleteCategory(id);
+		}catch (Exception e) {
+			response.setSuccess(false);
+			response.setData(null);
+			Map<String, List<String>> errorMap = new HashMap<String, List<String>>();
+			errorMap.put("error", Collections.singletonList(e.getMessage()));
+			response.setErrors(errorMap);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
+		response.setSuccess(true);
+		response.setMessage("Xoá danh mục thành công");
+		response.setData(null);
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
 	}
 }
 

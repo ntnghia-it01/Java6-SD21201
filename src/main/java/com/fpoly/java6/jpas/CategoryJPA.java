@@ -14,4 +14,8 @@ public interface CategoryJPA extends
 	@Query(value = "SELECT * FROM categories WHERE LOWER(name) = LOWER(?1)",
 			nativeQuery = true)
 	public Optional<CategoryEntity> getCategoryByName(String name);
+	
+	@Query(value = "SELECT * FROM categories WHERE LOWER(name) = LOWER(?1) AND id != ?2",
+			nativeQuery = true)
+	public Optional<CategoryEntity> getCategoryByNameAndId(String name, int id);
 }
