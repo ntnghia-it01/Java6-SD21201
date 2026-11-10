@@ -1,9 +1,11 @@
 package com.fpoly.java6.controllers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fpoly.java6.beans.CategoryBean;
+import com.fpoly.java6.response.CategoryResponse;
 import com.fpoly.java6.response.DataResponse;
 import com.fpoly.java6.services.CategoryService;
 import com.fpoly.java6.services.ErrorServices;
@@ -37,16 +40,13 @@ public class CategoryController {
 
 //	Lấy danh sách
 	@GetMapping
-	public ResponseEntity<DataResponse<ArrayList<String>>> getList(){
+	public ResponseEntity<DataResponse<List<CategoryResponse>>> getList(){
 //		Giả sử gọi đến API này sẽ trả về 1 chuỗi json 
-		DataResponse<ArrayList<String>> response = new DataResponse<ArrayList<String>>();
+		DataResponse<List<CategoryResponse>> response = new DataResponse<List<CategoryResponse>>();
 		response.setSuccess(true);
-		response.setMessage("Gọi API thành công");
-		ArrayList<String> array = new ArrayList<String>();
-		array.add("a");
-		array.add("b");
-		array.add("c");
-		response.setData(array);
+		response.setMessage("Lấy danh sách danh mục thành công");
+		List<CategoryResponse> categoryResponses = categoryService.getCategories();
+		response.setData(categoryResponses);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
@@ -63,9 +63,23 @@ public class CategoryController {
 //	POST /category
 	@PostMapping
 	public ResponseEntity<DataResponse<String>> adCategory(
-			@Valid @RequestBody CategoryBean bean,
+			@Valid @RequestBody Optional<CategoryBean> bean,
 			Errors errors){
 		DataResponse<String> response = new DataResponse<String>();
+		if (!bean.isPresent()) {
+	        Map<String, List<String>> errorMap = new HashMap<>();
+	        errorMap.put(
+	            "requestBody",
+	            Collections.singletonList("Request body không được để trống")
+	        );
+
+	        response.setSuccess(false);
+	        response.setData(null);
+	        response.setErrors(errorMap);
+
+	        return ResponseEntity.badRequest().body(response);
+	    }
+		
 		Map<String, List<String>> errorMap = errorServices.getError(errors);
 		
 		if(errorMap != null) {
@@ -76,14 +90,12 @@ public class CategoryController {
 		}
 		
 		try {
-			categoryService.addCategory(bean);
+			categoryService.addCategory(bean.get());
 		}catch (Exception e) {
 			response.setSuccess(false);
 			response.setData(null);
 			errorMap = new HashMap<String, List<String>>();
-			List<String> errorsDB = new ArrayList<String>();
-			errorsDB.add(e.getMessage());
-			errorMap.put("error", errorsDB);
+			errorMap.put("error", Collections.singletonList(e.getMessage()));
 			response.setErrors(errorMap);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}

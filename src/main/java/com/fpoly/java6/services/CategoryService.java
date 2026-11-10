@@ -1,5 +1,7 @@
 package com.fpoly.java6.services;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.fpoly.java6.beans.CategoryBean;
 import com.fpoly.java6.entities.CategoryEntity;
 import com.fpoly.java6.jpas.CategoryJPA;
+import com.fpoly.java6.response.CategoryResponse;
 
 @Service
 public class CategoryService {
@@ -30,5 +33,24 @@ public class CategoryService {
 		categoryEntity.setName(bean.getName());
 		
 		categoryJPA.save(categoryEntity);
+	}
+	
+	public List<CategoryResponse> getCategories(){
+		List<CategoryEntity> categoryEntities = categoryJPA.findAll();
+		
+		List<CategoryResponse> categoryResponses = new ArrayList<CategoryResponse>();
+		
+		for(CategoryEntity categoryEntity : categoryEntities) {
+			categoryResponses.add(convertEntityToResponse(categoryEntity));
+		}
+		
+		return categoryResponses;
+	}
+	
+	private CategoryResponse convertEntityToResponse(CategoryEntity categoryEntity) {
+		CategoryResponse categoryResponse = new CategoryResponse();
+		categoryResponse.setId(categoryEntity.getId());
+		categoryResponse.setName(categoryEntity.getName());
+		return categoryResponse;
 	}
 }
