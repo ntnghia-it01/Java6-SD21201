@@ -1,6 +1,7 @@
 package com.fpoly.java6.controllers;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +32,7 @@ import jakarta.validation.Valid;
 
 @RestController
 // Khi client gọi API /category => Controller sẽ kích hoạt
-@RequestMapping("/category")
+@RequestMapping("/categories")
 public class CategoryController {
 	
 	@Autowired
@@ -177,7 +178,7 @@ public class CategoryController {
 	public ResponseEntity<DataResponse<String>> deleteCategory(
 			@PathVariable(name = "id") String id){
 		DataResponse<String> response = new DataResponse<String>();
-		
+				
 		try {
 			categoryService.deleteCategory(id);
 		}catch (Exception e) {
