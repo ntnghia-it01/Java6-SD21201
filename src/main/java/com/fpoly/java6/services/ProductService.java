@@ -1,16 +1,43 @@
 package com.fpoly.java6.services;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fpoly.java6.beans.ProductBean;
+import com.fpoly.java6.entities.CategoryEntity;
+import com.fpoly.java6.entities.ProductEntity;
+import com.fpoly.java6.jpas.CategoryJPA;
+import com.fpoly.java6.jpas.ProductJPA;
 
 @Service
 public class ProductService {
 
+	@Autowired
+	private CategoryJPA categoryJPA;
+	
+	@Autowired
+	private ProductJPA productJPA;
+	
 	public void addProduct(ProductBean bean) {
 //		Kiểm tra danh mục của sản phẩm có tồn tại không?
 //		Do client gửi lên catId => Có khả năng danh mục không có trong DB
 		
+		Optional<CategoryEntity> catOptional = categoryJPA.findById(bean.getCatId());
+		
+		if(!catOptional.isPresent()) {
+			throw new RuntimeException("Danh mục không tồn tại");
+		}
 		
 //		Dùng base64 để nhận ảnh 
 //		base64:
@@ -20,12 +47,57 @@ public class ProductService {
 //		- chuỗi phải bắt đầu bằng data:image/**
 //		- Kiểu ảnh: png, jpg, jpge, webp
 		
+		if(!bean.getImage().startsWith("data:image/")) {
+			throw new RuntimeException("File tải lên phải là ảnh");
+		}
+		
+//		- Cắt chuỗi thành mảng từ dấu , => ["data:image/<Kiểu ảnh>", "<Mã base64>"]
+//		- "data:image/<Kiểu ảnh>" => Cắt thành 1 mảng từ dấu / => ["data:image", "<Kiểu ảnh>"]
+		String extend = bean.getImage().split(",")[0].split(";")[0].split("/")[1];
+		
+		String types[] = {"png", "jpg", "jpeg", "webp"};
+//		Chuyển mảng về thành array list
+		List<String> typeArray = Arrays.asList(types);
+		
+		System.out.println(extend);
+		
+		if(!typeArray.contains(extend)) {
+			throw new RuntimeException("Ảnh không đúng định dạng");
+		}
+		
+		byte image[] = Base64.getDecoder().decode(bean.getImage().split(",")[1]);
+		
+		String imageName = "";
+		
+		try {
+			String UPLOAD_DIR = "images-upload";
+			Files.createDirectories(Paths.get(UPLOAD_DIR));
+
+			imageName = String.format("%d.%s", new Date().getTime(), extend); 
+			Path targetPath = Paths.get(UPLOAD_DIR, imageName);
+
+			Files.write(targetPath, image);
+
+		} catch (IOException e) {
+			throw new RuntimeException("Lưu ảnh thất bại");
+		}
+		
 //		- Chuyển base64 => byte[] 
 //		- Kiểm tra độ lớn của file => Giới hạn 5MB
 //		
 //		Lưu ảnh vào folder để có tên ảnh
 //		Lưu thông tin sản phẩm vào db
 		
+		ProductEntity productEntity = new ProductEntity();
+		productEntity.setName(bean.getName());
+		productEntity.setDesc(bean.getDesc());
+		productEntity.setPrice(bean.getPrice());
+		productEntity.setQuantity(bean.getQuantity());
+		productEntity.setStatus(bean.getStatus().getValue());
+		productEntity.setImage(imageName);
+		productEntity.setCategoryEntity(catOptional.get());
+		
+		productJPA.save(productEntity);
 		
 	}
 }

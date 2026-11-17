@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fpoly.java6.beans.ProductBean;
 import com.fpoly.java6.response.DataResponse;
 import com.fpoly.java6.services.ErrorServices;
+import com.fpoly.java6.services.ProductService;
 
 import jakarta.validation.Valid;
 
@@ -27,6 +28,9 @@ public class ProductController {
 	
 	@Autowired
 	private ErrorServices errorServices;
+	
+	@Autowired
+	private ProductService productService;
 
 //	url /products POST
 //	Thêm sản phẩm vào db
@@ -61,7 +65,17 @@ public class ProductController {
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
 		
-//		Gọi service để lưu vào db
+		try {
+			productService.addProduct(beanOptional.get());
+		}catch (Exception e) {
+			errorMap = new HashMap<>();
+	        errorMap.put("error", Collections.singletonList(e.getMessage()));
+	        response.setSuccess(false);
+	        response.setData(null);
+	        response.setErrors(errorMap);
+
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
 		
 		response.setSuccess(true);
 		response.setMessage("Tạo danh mục thành công");
