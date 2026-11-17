@@ -122,7 +122,7 @@ public class CategoryService {
 		}
 	}
 	
-	private CategoryResponse convertEntityToResponse(CategoryEntity categoryEntity) {
+	public static CategoryResponse convertEntityToResponse(CategoryEntity categoryEntity) {
 		CategoryResponse categoryResponse = new CategoryResponse();
 		categoryResponse.setId(categoryEntity.getId());
 		categoryResponse.setName(categoryEntity.getName());

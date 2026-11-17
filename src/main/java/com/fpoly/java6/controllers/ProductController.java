@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fpoly.java6.beans.ProductBean;
 import com.fpoly.java6.response.DataResponse;
+import com.fpoly.java6.response.ProductResponse;
 import com.fpoly.java6.services.ErrorServices;
 import com.fpoly.java6.services.ProductService;
 
@@ -31,6 +33,17 @@ public class ProductController {
 	
 	@Autowired
 	private ProductService productService;
+	
+	@GetMapping
+	public ResponseEntity<DataResponse<List<ProductResponse>>> productList(){
+		DataResponse<List<ProductResponse>> response = new DataResponse<List<ProductResponse>>();
+		
+		response.setSuccess(true);
+		response.setMessage("Lấy danh sách sản phẩm thành công");
+		response.setData(productService.getProducts());
+		
+		return ResponseEntity.status(HttpStatus.OK).body(response);
+	}
 
 //	url /products POST
 //	Thêm sản phẩm vào db

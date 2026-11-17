@@ -20,7 +20,7 @@ public enum ProductStatus {
 		return desc;
 	}
 	
-	public ProductStatus getProductStatus(int status) {
+	public static ProductStatus getProductStatus(int status) {
 //		ProductStatus.values() => Mảng giá trị enum 
 		for(ProductStatus productStatus : ProductStatus.values()) {
 			if(productStatus.getValue() == status) {

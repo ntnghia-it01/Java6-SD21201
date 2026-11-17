@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
@@ -17,8 +18,11 @@ import org.springframework.stereotype.Service;
 import com.fpoly.java6.beans.ProductBean;
 import com.fpoly.java6.entities.CategoryEntity;
 import com.fpoly.java6.entities.ProductEntity;
+import com.fpoly.java6.enums.ProductStatus;
 import com.fpoly.java6.jpas.CategoryJPA;
 import com.fpoly.java6.jpas.ProductJPA;
+import com.fpoly.java6.response.CategoryResponse;
+import com.fpoly.java6.response.ProductResponse;
 
 @Service
 public class ProductService {
@@ -99,5 +103,33 @@ public class ProductService {
 		
 		productJPA.save(productEntity);
 		
+	}
+	
+	public List<ProductResponse> getProducts(){
+		List<ProductEntity> prodEntities = productJPA.findAll();
+		
+		List<ProductResponse> prodResponses = new ArrayList<ProductResponse>();
+		
+		for(ProductEntity prodEntity : prodEntities) {
+			prodResponses.add(convertEntityToResponse(prodEntity));
+		}
+		
+		return prodResponses;
+	} 
+	
+//	DTO
+	public ProductResponse convertEntityToResponse(ProductEntity productEntity) {
+		ProductResponse productResponse = new ProductResponse();
+		productResponse.setName(productEntity.getName());
+		productResponse.setDesc(productEntity.getDesc());
+		productResponse.setPrice(productEntity.getPrice());
+		productResponse.setQuantity(productEntity.getQuantity());
+		productResponse.setStatus(productEntity.getStatus());
+		productResponse.setImage(String.format("/images-upload/%s", productEntity.getImage()));
+		productResponse.setCategory(CategoryService
+				.convertEntityToResponse(productEntity.getCategoryEntity()));
+		productResponse.setStatusString(ProductStatus
+				.getProductStatus(productEntity.getStatus()).getDesc());
+		return productResponse;
 	}
 }
