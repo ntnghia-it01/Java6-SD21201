@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -105,7 +106,9 @@ public class ProductService {
 		
 	}
 	
-	public void updateProduct(ProductBean bean, int id) {
+//	Khai báo throws để biết khi gọi phương thức updateProduct
+//	Bắt buộc phải nằm trong try catch
+	public void updateProduct(ProductBean bean, int id) throws RuntimeException, SQLException{
 		
 		Optional<ProductEntity> prodOptional = productJPA.findById(id);
 		
