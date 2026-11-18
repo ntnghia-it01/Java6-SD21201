@@ -1,7 +1,5 @@
 package com.fpoly.java6.beans;
 
-import org.hibernate.validator.constraints.Range;
-
 import com.fpoly.java6.enums.ProductStatus;
 
 import jakarta.validation.constraints.Min;
@@ -29,7 +27,7 @@ public class ProductBean {
 	@Min(value = 0, message = "Số lượng tối thiểu là 0")
 	private int quantity;
 	
-//	@Range(min = 1, max = 2, message = "Trạng thái không đúng")
+	@NotNull(message = "Trạng thái là bắt buộc")
 	private ProductStatus status;
 //	1 Đang bán
 //	2 Ngưng bán

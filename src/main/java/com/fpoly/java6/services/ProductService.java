@@ -105,6 +105,66 @@ public class ProductService {
 		
 	}
 	
+	public void updateProduct(ProductBean bean, int id) {
+		
+		Optional<ProductEntity> prodOptional = productJPA.findById(id);
+		
+		if(!prodOptional.isPresent()) {
+			throw new RuntimeException("Sản phẩm không tồn tại");
+		}
+		
+		Optional<CategoryEntity> catOptional = categoryJPA.findById(bean.getCatId());
+		
+		if(!catOptional.isPresent()) {
+			throw new RuntimeException("Danh mục không tồn tại");
+		}
+		
+		if(!bean.getImage().startsWith("data:image/")) {
+			throw new RuntimeException("File tải lên phải là ảnh");
+		}
+		
+		String extend = bean.getImage().split(",")[0].split(";")[0].split("/")[1];
+		
+		String types[] = {"png", "jpg", "jpeg", "webp"};
+		List<String> typeArray = Arrays.asList(types);
+		
+		System.out.println(extend);
+		
+		if(!typeArray.contains(extend)) {
+			throw new RuntimeException("Ảnh không đúng định dạng");
+		}
+		
+		byte image[] = Base64.getDecoder().decode(bean.getImage().split(",")[1]);
+		
+		String imageName = "";
+		
+		try {
+			String UPLOAD_DIR = "images-upload";
+			Files.createDirectories(Paths.get(UPLOAD_DIR));
+
+			imageName = String.format("%d.%s", new Date().getTime(), extend); 
+			Path targetPath = Paths.get(UPLOAD_DIR, imageName);
+
+			Files.write(targetPath, image);
+
+		} catch (IOException e) {
+			throw new RuntimeException("Lưu ảnh thất bại");
+		}
+		
+		ProductEntity productEntity = new ProductEntity();
+		productEntity.setId(id);
+		productEntity.setName(bean.getName());
+		productEntity.setDesc(bean.getDesc());
+		productEntity.setPrice(bean.getPrice());
+		productEntity.setQuantity(bean.getQuantity());
+		productEntity.setStatus(bean.getStatus().getValue());
+		productEntity.setImage(imageName);
+		productEntity.setCategoryEntity(catOptional.get());
+		
+		productJPA.save(productEntity);
+		
+	}
+	
 	public List<ProductResponse> getProducts(){
 		List<ProductEntity> prodEntities = productJPA.findAll();
 		
@@ -116,6 +176,44 @@ public class ProductService {
 		
 		return prodResponses;
 	} 
+	
+	public List<ProductResponse> getProductsPublic(){
+		List<ProductEntity> prodEntities = productJPA.getListByStatusTrue();
+		
+		List<ProductResponse> prodResponses = new ArrayList<ProductResponse>();
+		
+		for(ProductEntity prodEntity : prodEntities) {
+			prodResponses.add(convertEntityToResponse(prodEntity));
+		}
+		
+		return prodResponses;
+	} 
+	
+	public ProductResponse getProductDetail(int id) {
+		Optional<ProductEntity> prodOptional = productJPA.findById(id);
+		
+		if(!prodOptional.isPresent()) {
+			throw new RuntimeException("Sản phẩm không tồn tại");
+		}
+		
+		return convertEntityToResponse(prodOptional.get());
+	}
+	
+	public void updateProductStatus(int id, int status) {
+		try {
+			Optional<ProductEntity> prodOptional = productJPA.findById(id);
+			
+			if(!prodOptional.isPresent()) {
+				throw new RuntimeException("Sản phẩm không tồn tại");
+			}
+			
+			ProductEntity productEntity = prodOptional.get();
+			productEntity.setStatus(status);
+			productJPA.save(productEntity);
+		}catch(Exception e) {
+			throw new RuntimeException("Có lỗi khi cập nhật trạng thái");
+		}
+	}
 	
 //	DTO
 	public ProductResponse convertEntityToResponse(ProductEntity productEntity) {
