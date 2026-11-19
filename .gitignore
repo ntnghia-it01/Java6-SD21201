@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Khóa JWT cục bộ
+/jwt-secret.properties
