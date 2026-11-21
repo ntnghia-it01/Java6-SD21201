@@ -219,7 +219,7 @@ public class ProductService {
 	}
 	
 //	DTO
-	public ProductResponse convertEntityToResponse(ProductEntity productEntity) {
+	public static ProductResponse convertEntityToResponse(ProductEntity productEntity) {
 		ProductResponse productResponse = new ProductResponse();
 		productResponse.setName(productEntity.getName());
 		productResponse.setDesc(productEntity.getDesc());

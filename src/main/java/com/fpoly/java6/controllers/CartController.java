@@ -4,7 +4,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fpoly.java6.beans.CartBean;
+import com.fpoly.java6.response.CartItemResponse;
 import com.fpoly.java6.response.DataResponse;
+import com.fpoly.java6.response.ProductResponse;
 import com.fpoly.java6.services.CartService;
 import com.fpoly.java6.services.ErrorServices;
 
@@ -24,6 +26,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -98,6 +103,19 @@ public class CartController {
 		response.setData(null);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	}
+	
+	@GetMapping
+	public ResponseEntity<DataResponse<List<CartItemResponse>>> cartItemList(
+			@AuthenticationPrincipal Jwt jwt){
+		int id = Integer.parseInt(jwt.getSubject());
+		DataResponse<List<CartItemResponse>> response = new DataResponse<List<CartItemResponse>>(); 
+		
+		response.setSuccess(true);
+		response.setMessage("Lấy danh sách sản phẩm trong giỏ hàng thành công");
+		response.setData(cartService.getCartItem(id));
+		
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 	
 }

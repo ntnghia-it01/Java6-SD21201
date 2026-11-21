@@ -1,5 +1,7 @@
 package com.fpoly.java6.services;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,8 @@ import com.fpoly.java6.jpas.CartItemJPA;
 import com.fpoly.java6.jpas.CartJPA;
 import com.fpoly.java6.jpas.ProductJPA;
 import com.fpoly.java6.jpas.UserJPA;
+import com.fpoly.java6.response.CartItemResponse;
+import com.fpoly.java6.response.ProductResponse;
 
 @Service
 public class CartService {
@@ -86,5 +90,46 @@ public class CartService {
 //			Cập nhật số lượng
 			cartItemJPA.save(cartItemEntity);
 		}
+	}
+	
+	public List<CartItemResponse> getCartItem(int userId){
+		UserEntity userEntity = userJPA.findById(userId).get();
+		
+		if(userEntity.getCartEntity() == null) {
+			return new ArrayList<CartItemResponse>();
+		}
+		
+		List<CartItemEntity> cartItemEntities = userEntity.getCartEntity().getCartItemEntities();
+		
+		List<CartItemResponse> cartItemResponses = new ArrayList<CartItemResponse>();
+		
+		for(CartItemEntity cartItemEntity : cartItemEntities) {
+			cartItemResponses.add(convertEntityToResponse(cartItemEntity));
+		}
+		
+		return cartItemResponses;
+	} 
+	
+	public static CartItemResponse convertEntityToResponse(CartItemEntity entity) {
+		CartItemResponse response = new CartItemResponse();
+		response.setId(entity.getId());
+		response.setQuantity(entity.getQuantity());
+		ProductResponse productResponse = ProductService
+				.convertEntityToResponse(entity.getProductEntity());
+		response.setProductResponse(productResponse);
+		
+		if(productResponse.getQuantity() > response.getQuantity()) {
+			response.setStatus(CartItemResponse.CartItemStatus.AVALIBLE);
+		}
+		
+		if(productResponse.getQuantity() <= response.getQuantity()) {
+			response.setStatus(CartItemResponse.CartItemStatus.UNAVALIBLE);
+		}
+		
+		if(ProductStatus.getProductStatus(productResponse.getStatus())
+				.equals(ProductStatus.INACTIVE)) {
+			response.setStatus(CartItemResponse.CartItemStatus.INACTIVE);
+		}
+		return response;
 	}
 }
