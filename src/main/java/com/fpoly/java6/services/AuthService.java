@@ -77,8 +77,14 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email hoặc mật khẩu không đúng");
         }
         Instant now = Instant.now();
-        JwtClaimsSet claims = JwtClaimsSet.builder().issuer(issuer).subject(user.getId().toString())
-                .issuedAt(now).expiresAt(now.plusSeconds(expirationSeconds)).build();
+        JwtClaimsSet claims = JwtClaimsSet
+        		.builder()
+        		.issuer(issuer)
+        		.subject(user.getId().toString())
+        		.claim("email", user.getEmail())
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(expirationSeconds))
+                .build();
         String token = jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
         return new LoginResponse(token, "Bearer", expirationSeconds);
     }

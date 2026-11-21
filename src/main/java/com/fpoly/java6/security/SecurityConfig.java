@@ -2,14 +2,15 @@ package com.fpoly.java6.security;
 
 import java.util.Base64;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
+import javax.crypto.spec.SecretKeySpec;import org.aspectj.weaver.CrosscuttingMembers;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -66,14 +67,22 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, UserJPA users) throws Exception {
         return http
+//        		.csrf(new Customizer<CsrfConfigurer<HttpSecurity>>() {
+//					@Override
+//					public void customize(CsrfConfigurer<HttpSecurity> t) {
+//						t.disable();
+//					}
+//        		})
+//        		IP
+        		.cors(cros -> cros.disable())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .requestCache(cache -> cache.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products", "/products/**", "/categories", "/categories/**", "/images-upload/**").permitAll()
-                        .requestMatchers("/products", "/products/**", "/categories", "/categories/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasRole("USER"))
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(token -> authenticate(token, users))))
                 .build();
     }
